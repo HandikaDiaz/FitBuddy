@@ -13,12 +13,13 @@ export default function VoicePage() {
     const [isListening, setIsListening] = useState(false);
     const [transcript, setTranscript] = useState("");
     const [response, setResponse] = useState("");
-    const [, setError] = useState("");
+    const [error, setError] = useState("");
     const recognitionRef = useRef<SpeechRecognition | null>(null);
     const lastProcessedRef = useRef<ProcessedItem>({ text: "", timestamp: 0 });
     const { darkMode } = useDarkModeStore();
 
     const handleMicError = useCallback((error: string) => {
+        console.error("Recognition error:", error);
         setError(`Error: ${error}`);
         setIsListening(false);
     }, []);
@@ -56,11 +57,6 @@ export default function VoicePage() {
     }, []);
 
     useEffect(() => {
-        if (!isListening) {
-            recognitionRef.current?.stop();
-            return;
-        }
-
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
         if (!SpeechRecognition) {
@@ -68,36 +64,69 @@ export default function VoicePage() {
             return;
         }
 
-        if (recognitionRef.current) {
-            recognitionRef.current.lang = "id-ID";
-            recognitionRef.current.continuous = true;
-            recognitionRef.current.interimResults = false;
+        // Inisialisasi dengan type assertion
+        recognitionRef.current = new SpeechRecognition();
+        const recognition = recognitionRef.current;
 
-            recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
-                const last = event.results.length - 1;
-                const text = event.results[last][0].transcript;
-                processCommand(text);
-            };
-
-            recognitionRef.current.onerror = (event: SpeechRecognitionErrorEvent) => {
-                handleMicError(event.error);
-            };
-
-            recognitionRef.current.start();
+        // Pastikan recognition tidak null
+        if (!recognition) {
+            handleMicError("Gagal menginisialisasi speech recognition");
+            return;
         }
 
+        recognition.lang = "id-ID";
+        recognition.continuous = true;
+        recognition.interimResults = false;
 
+        recognition.onresult = (event: SpeechRecognitionEvent) => {
+            const last = event.results.length - 1;
+            const text = event.results[last][0].transcript;
+            processCommand(text);
+        };
+
+        recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+            handleMicError(event.error);
+        };
 
         return () => {
-            recognitionRef.current?.abort();
+            recognition.abort();
         };
-    }, [isListening, processCommand, handleMicError]);
+    }, [processCommand, handleMicError]);
+
+    useEffect(() => {
+        if (!recognitionRef.current) return;
+
+        const recognition = recognitionRef.current;
+
+        if (isListening) {
+            try {
+                recognition.start();
+                recognition.onend = () => {
+                    if (isListening && recognitionRef.current) {
+                        recognitionRef.current.start();
+                    }
+                };
+            } catch (error) {
+                handleMicError("Gagal memulai recognition: " + error);
+                setIsListening(false);
+            }
+        } else {
+            recognition.onend = null;
+            recognition.stop();
+        }
+
+        return () => {
+            if (recognitionRef.current) {
+                recognitionRef.current.onend = null;
+                recognitionRef.current.stop();
+            }
+        };
+    }, [isListening, handleMicError]);
 
     useEffect(() => {
         return () => {
             cancelSpeech();
             recognitionRef.current?.abort();
-            recognitionRef.current = null;
         };
     }, []);
 
@@ -109,6 +138,12 @@ export default function VoicePage() {
             <h1 className={`text-3xl font-bold mb-6 ${darkMode ? "text-dark-primary" : "text-light-primary"
                 }`}>AI Voice Coach
             </h1>
+
+            {error && (
+                <div className={`p-4 mb-6 rounded-lg ${darkMode ? "bg-red-900/50" : "bg-red-100"} text-red-600`}>
+                    {error}
+                </div>
+            )}
 
             <div className={`p-6 rounded-xl mb-6 backdrop-blur-md ${darkMode
                 ? "bg-dark-card border-dark-accent/30"
