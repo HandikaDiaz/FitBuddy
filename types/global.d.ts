@@ -1,13 +1,29 @@
-export { };
-
 declare global {
     interface Window {
-        SpeechRecognition: any;
-        webkitSpeechRecognition: any;
+        SpeechRecognition: typeof SpeechRecognition;
+        webkitSpeechRecognition: typeof SpeechRecognition;
     }
 
-    interface SpeechRecognitionEvent extends Event {
+    interface SpeechRecognition extends EventTarget {
+        new(): SpeechRecognition;
+        continuous: boolean;
+        interimResults: boolean;
+        lang: string;
+        start(): void;
+        stop(): void;
+        abort(): void;
+        onresult: (event: SpeechRecognitionEvent) => void;
+        onerror: (event: SpeechRecognitionErrorEvent) => void;
+    }
+
+    interface SpeechRecognitionEvent {
         results: SpeechRecognitionResultList;
-        error: SpeechRecognitionError;
+    }
+
+    interface SpeechRecognitionErrorEvent extends Event {
+        error: string;
+        message: string;
     }
 }
+
+export { };

@@ -1,7 +1,6 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { VOICE_COMMANDS } from "./voice-commands";
-import { startListening } from "./utils/speech";
 import { cancelSpeech, speak } from "./utils/audio";
 import { useDarkModeStore } from "@/store/darkModeStore";
 
@@ -14,8 +13,8 @@ export default function VoicePage() {
     const [isListening, setIsListening] = useState(false);
     const [transcript, setTranscript] = useState("");
     const [response, setResponse] = useState("");
-    const [_, setError] = useState("");
-    const recognitionRef = useRef<any>(null);
+    const [, setError] = useState("");
+    const recognitionRef = useRef<SpeechRecognition | null>(null);
     const lastProcessedRef = useRef<ProcessedItem>({ text: "", timestamp: 0 });
     const { darkMode } = useDarkModeStore();
 
@@ -62,30 +61,32 @@ export default function VoicePage() {
             return;
         }
 
-        const SpeechRecognition =
-            (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
         if (!SpeechRecognition) {
             handleMicError("Browser tidak mendukung Web Speech API");
             return;
         }
 
-        recognitionRef.current = new SpeechRecognition();
-        recognitionRef.current.lang = "id-ID";
-        recognitionRef.current.continuous = true;
-        recognitionRef.current.interimResults = false;
+        if (recognitionRef.current) {
+            recognitionRef.current.lang = "id-ID";
+            recognitionRef.current.continuous = true;
+            recognitionRef.current.interimResults = false;
 
-        recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
-            const last = event.results.length - 1;
-            const text = event.results[last][0].transcript;
-            processCommand(text);
-        };
+            recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
+                const last = event.results.length - 1;
+                const text = event.results[last][0].transcript;
+                processCommand(text);
+            };
 
-        recognitionRef.current.onerror = (event: any) => {
-            handleMicError(event.error);
-        };
+            recognitionRef.current.onerror = (event: SpeechRecognitionErrorEvent) => {
+                handleMicError(event.error);
+            };
 
-        recognitionRef.current.start();
+            recognitionRef.current.start();
+        }
+
+
 
         return () => {
             recognitionRef.current?.abort();
@@ -167,7 +168,7 @@ export default function VoicePage() {
                 <h2 className="text-xl font-bold mb-4">Contoh Perintah</h2>
                 <ul className="space-y-2">
                     {VOICE_COMMANDS.map((cmd, index) => (
-                        <li key={index}>• "{cmd.command}"</li>
+                        <li key={index}>• &quot;{cmd.command}&quot;</li>
                     ))}
                 </ul>
             </div>

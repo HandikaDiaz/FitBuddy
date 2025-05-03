@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import dynamic from 'next/dynamic';
@@ -138,7 +137,7 @@ export default function HomePage() {
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
-              {features.map((feature, index) => (
+              {features.map((feature) => (
                 <motion.div
                   key={feature.id}
                   whileHover={{ y: -10 }}

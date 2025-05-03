@@ -12,6 +12,7 @@ export default function GesturePage() {
     const detectionFrameRef = useRef<number | null>(null);
 
     useEffect(() => {
+        const videoElement = videoRef.current; // ✅ Simpan ref
         let model: handpose.HandPose;
 
         const isFingerOpen = (tipY: number, pipY: number) => tipY < pipY;
@@ -43,20 +44,20 @@ export default function GesturePage() {
         };
 
         const startDetection = async () => {
-            if (!videoRef.current) return;
+            if (!videoElement) return;
 
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: true,
             });
 
-            videoRef.current.srcObject = stream;
-            await videoRef.current.play();
+            videoElement.srcObject = stream;
+            await videoElement.play();
 
             model = await handpose.load();
 
             const detect = async () => {
-                if (!videoRef.current) return;
-                const predictions = await model.estimateHands(videoRef.current);
+                if (!videoElement) return;
+                const predictions = await model.estimateHands(videoElement);
 
                 if (predictions.length > 0 && predictions[0].landmarks) {
                     const result = detectGesture(predictions[0].landmarks as number[][]);
@@ -74,7 +75,7 @@ export default function GesturePage() {
         if (isActive) {
             startDetection();
         } else {
-            const stream = videoRef.current?.srcObject as MediaStream;
+            const stream = videoElement?.srcObject as MediaStream;
             stream?.getTracks().forEach((track) => track.stop());
             if (detectionFrameRef.current) {
                 cancelAnimationFrame(detectionFrameRef.current);
@@ -83,13 +84,14 @@ export default function GesturePage() {
         }
 
         return () => {
-            const stream = videoRef.current?.srcObject as MediaStream;
+            const stream = videoElement?.srcObject as MediaStream;
             stream?.getTracks().forEach((track) => track.stop());
             if (detectionFrameRef.current) {
                 cancelAnimationFrame(detectionFrameRef.current);
             }
         };
     }, [isActive]);
+
 
     return (
         <div className={`min-h-screen p-8 transition-colors duration-200 ${darkMode

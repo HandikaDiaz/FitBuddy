@@ -5,10 +5,17 @@ import { google } from 'googleapis';
 import { FcGoogle } from 'react-icons/fc';
 import { useDarkModeStore } from '@/store/darkModeStore';
 
-export default function GoogleCalendarButton({ schedule }: { schedule: Array<any> }) {
+// Definisikan tipe ScheduleItem
+interface ScheduleItem {
+    day: string;
+    time: string;
+    workout: string;
+}
+
+export default function GoogleCalendarButton({ schedule }: { schedule: Array<ScheduleItem> }) {
     const { darkMode } = useDarkModeStore();
     const [isLoading, setIsLoading] = useState(false);
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [isAuthenticated] = useState(false);
 
     const handleAuth = async () => {
         setIsLoading(true);

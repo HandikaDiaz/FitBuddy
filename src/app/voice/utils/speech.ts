@@ -22,7 +22,7 @@ export const startListening = (
         onResult(text.trim());
     };
 
-    recognition.onerror = (event: SpeechRecognitionEvent) => {
+    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
         onError(`Error: ${event.error}`);
     };
 

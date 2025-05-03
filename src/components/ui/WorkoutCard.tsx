@@ -1,7 +1,14 @@
 "use client";
 import { motion } from "framer-motion";
 
-export default function WorkoutCard({ workout }: { workout: any }) {
+// Definisikan tipe Workout
+interface Workout {
+    name: string;
+    description: string;
+    duration: number;
+}
+
+export default function WorkoutCard({ workout }: { workout: Workout }) {
     return (
         <motion.div
             whileHover={{ y: -5 }}
