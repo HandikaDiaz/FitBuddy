@@ -3,6 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SunIcon, MoonIcon } from "@heroicons/react/24/outline";
 import { useDarkModeStore } from "@/store/darkModeStore";
+import MobileMenu from "./MobileMenu";
 
 export default function Navbar() {
     const pathname = usePathname();
@@ -16,7 +17,8 @@ export default function Navbar() {
             : "bg-light-bg/80 border-gray-200"
             }`}>
             <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-                <div className="flex-1">
+                <div className="flex flex-1 items-center">
+                    <MobileMenu />
                     <Link
                         href="/"
                         className={`text-2xl font-bold ${darkMode

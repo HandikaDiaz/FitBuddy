@@ -12,7 +12,7 @@ export default function GesturePage() {
     const detectionFrameRef = useRef<number | null>(null);
 
     useEffect(() => {
-        const videoElement = videoRef.current; // ✅ Simpan ref
+        const videoElement = videoRef.current;
         let model: handpose.HandPose;
 
         const isFingerOpen = (tipY: number, pipY: number) => tipY < pipY;
